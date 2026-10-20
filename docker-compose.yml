@@ -1,0 +1,47 @@
+services:
+  # Подготовка прав на именованные тома. RustFS запускается от UID 10001.
+  volume-permission-helper:
+    image: alpine:3.20
+    user: "0:0"
+    restart: "no"
+    volumes:
+      - rustfs_disk1:/data/rustfs0
+      - rustfs_disk2:/data/rustfs1
+      - rustfs_disk3:/data/rustfs2
+      - rustfs_disk4:/data/rustfs3
+    command:
+      - /bin/sh
+      - -c
+      - chown -R 10001:10001 /data/rustfs0 /data/rustfs1 /data/rustfs2 /data/rustfs3
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: php-analytics-rustfs
+    restart: unless-stopped
+    depends_on:
+      volume-permission-helper:
+        condition: service_completed_successfully
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?Set RUSTFS_SECRET_KEY in .env}
+      RUSTFS_ADDRESS: "0.0.0.0:9000"
+      RUSTFS_CONSOLE_ADDRESS: "0.0.0.0:9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      # Учебный режим: четыре именованных тома могут лежать на одном физическом диске.
+      # Это не моделирует отказ независимых физических дисков.
+      RUSTFS_UNSAFE_BYPASS_DISK_CHECK: "true"
+    volumes:
+      - rustfs_disk1:/data/rustfs0
+      - rustfs_disk2:/data/rustfs1
+      - rustfs_disk3:/data/rustfs2
+      - rustfs_disk4:/data/rustfs3
+    command: ["server", "/data/rustfs{0...3}"]
+
+volumes:
+  rustfs_disk1:
+  rustfs_disk2:
+  rustfs_disk3:
+  rustfs_disk4:

@@ -1,0 +1,15 @@
+[project]
+name = "php-vacancies-analytics"
+version = "0.2.0"
+description = "Потоковый анализ PHP-вакансий с RustFS, MapReduce и DuckDB"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "boto3>=1.34,<2",
+  "pandas>=2.1,<4",
+  "duckdb>=1.1,<2",
+  "psutil>=5.9,<8",
+  "python-dotenv>=1.0,<2",
+]
+
+[tool.uv]
+package = false
